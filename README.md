@@ -1,1 +1,1 @@
-# Human_re-id_PyTorch
+# Video_Reid_PyTorch
