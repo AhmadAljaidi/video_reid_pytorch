@@ -3,9 +3,6 @@ import cv2
 import glob
 import random
 import numpy as np
-import torch
-from torchvision import transforms, datasets
-from tensorboardX import SummaryWriter
 
 class dataLoader(object):
     def __init__(self, data_directory, train_test_dir, nPersons, dataset_name,
@@ -102,8 +99,6 @@ class dataLoader(object):
         p_n_batch = []
         p1_idx_batch = []
         p2_idx_batch = []
-        p1_opt_batch = []
-        p2_opt_batch = []
         # Generate training batch
         for _ in range(batch_size):
             p1_step = []
@@ -215,13 +210,13 @@ class dataLoader(object):
             p2_batch.append(p2_step)
 
             p_n_batch.append(pos_neg)
-            one_hot_1 = np.zeros((len(self.all_person)))
-            one_hot_1[pA_person] = 1.0
-            one_hot_2 = np.zeros((len(self.all_person)))
-            one_hot_2[pB_person] = 1.0
+#            one_hot_1 = np.zeros((len(self.all_person)))
+#            one_hot_1[pA_person] = 1.0
+#            one_hot_2 = np.zeros((len(self.all_person)))
+#            one_hot_2[pB_person] = 1.0
 
-            p1_idx_batch.append(one_hot_1)
-            p2_idx_batch.append(one_hot_2)
+            p1_idx_batch.append(pA_person)
+            p2_idx_batch.append(pB_person)
             #---------------------------------------------------------------
 
         output_list = [np.array(p1_batch), np.array(p2_batch), np.array(p_n_batch),\

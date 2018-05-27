@@ -6,6 +6,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.autograd import Variable
+from tensorboardX import SummaryWriter
 
 class reid_Learner(object):
     def __init__(self):
@@ -89,7 +90,7 @@ class reid_Learner(object):
                 loss.backward()
 
                 # Clip gradient
-                torch.nn.utils.clip_grad_value(net.parameters(), opt.clip_grad)
+                torch.nn.utils.clip_grad_norm(net.parameters(), opt.clip_grad)
 
                 # Update the weights
                 optimizer.step()
@@ -98,14 +99,14 @@ class reid_Learner(object):
                     interm_loss = loss.clone().cpu().data.numpy()
                     writer.add_scalar('loss', interm_loss, i)
                     for name, param in net.named_parameters():
-                        writer.add_histogram(name, param.clone().cpu().data.numpy(), n_iter)
-                    print('Loss: ', interm_loss, ' at iteration: ', step)
+                        writer.add_histogram(name, param.clone().cpu().data.numpy(), i)
+                    print('Loss: ', interm_loss, ' at Epoch: ', str(eph + 1), ' iteration: ', i)
 
-                if eph % opt.save_latest_freq == 0:
-                    model_name = 'hnRiD_' + str(i) + '.ckpt'
-                    checkpoint_path = os.path.join(opt.checkpoint_dir, model_name)
-                    torch.save(net.state_dict(), checkpoint_path)
-                    print("Intermediate file saved")
+            if eph % opt.save_latest_freq == 0:
+                model_name = 'hnRiD_' + str(i) + '.ckpt'
+                checkpoint_path = os.path.join(opt.checkpoint_dir, model_name)
+                torch.save(net.state_dict(), checkpoint_path)
+                print("Intermediate file saved")
 
         model_name = 'hnRiD_latest.ckpt'
         checkpoint_path = os.path.join(opt.checkpoint_dir, model_name)
@@ -113,5 +114,5 @@ class reid_Learner(object):
         print("Training Complete and latest checkpoint saved!")
 
         # Export scalar data to JSON for external processing
-        writer.export_scalars_to_json("./logs/" + str(exp_name) + ".json")
+        writer.export_scalars_to_json("./logs/" + str(opt.exp_name) + ".json")
         writer.close()

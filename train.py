@@ -20,7 +20,7 @@ flags.DEFINE_bool("use_opt_flow", False, "Use optical flow")
 flags.DEFINE_integer("batch_size", 1, "The size of of a sample batch")
 flags.DEFINE_integer("image_width",  48, "Image width, must same as prepare_dataset")
 flags.DEFINE_integer("image_height", 64, "Image height, must same as prepare_dataset")
-flags.DEFINE_integer("hidden_units", 128, "Hidden units in RNN")
+flags.DEFINE_integer("hidden_size", 128, "Hidden units in RNN")
 flags.DEFINE_integer("sequence_length", 16, "RNN time steps")
 flags.DEFINE_integer("nPersons", 150, "Total number of people")
 flags.DEFINE_integer("margin", 2, "Hinge loss margin")
@@ -31,11 +31,11 @@ flags.DEFINE_float("drop", 0.5,    " Dropout probability")
 flags.DEFINE_float("l2", 0.0005,   " Weight Decay")
 flags.DEFINE_float("l_rate", 0.0001, " learning rate")
 flags.DEFINE_float("clip_grad", 5.0, "Magnitude of clip on the RNN gradient")
-flags.DEFINE_integer("reduce_l_rate_itr", 10000, "Reduce learning rate after this many iterations")
+flags.DEFINE_integer("reduce_l_rate_itr", 5000, "Reduce learning rate after this many iterations")
 flags.DEFINE_integer("summary_freq", 20, "Logging every summary_freq iterations")
-flags.DEFINE_integer("valid_freq",   25, "Logging every valid_freq iterations")
+flags.DEFINE_integer("valid_freq",   25, "Logging every valid_freq epoch")
 flags.DEFINE_integer("save_latest_freq", 25, \
-                       "Save the latest model every save_latest_freq iterations")
+                       "Save the latest model every save_latest_freq epoch")
 FLAGS = flags.FLAGS
 
 def main(_):

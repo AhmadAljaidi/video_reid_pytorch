@@ -20,7 +20,8 @@ parser.add_argument("--use_data_aug",    type=str, default='True', help="True/Fa
 parser.add_argument("--image_height",    type=int, default=64, help="image height")
 parser.add_argument("--image_width",     type=int, default=48, help="image width")
 parser.add_argument("--n_steps",         type=int, default=16, help="Sequence length")
-parser.add_argument("--use_gpu",         type=int, default=1,  help="Use GPU if available")
+parser.add_argument("--hidden_size",     type=int, default=128, help="RNN Hidden Size")
+parser.add_argument("--use_gpu",         type=int, default=1,   help="Use GPU if available")
 
 args = parser.parse_args()
 print('----------------------------------------')
@@ -140,9 +141,9 @@ all_person, all_seq_cam1, all_seq_cam2 = prepare_test_dataset(args.dataset_dir, 
 
 # Build test graph
 if args.use_opt_flow == 'True':
-    net = Net(5, opt.hidden_size, 1.0)
+    net = Net(5, args.hidden_size, 1.0)
 else:
-    net = Net(3, opt.hidden_size, 1.0)
+    net = Net(3, args.hidden_size, 1.0)
 # Set model to test
 net.eval()
 
