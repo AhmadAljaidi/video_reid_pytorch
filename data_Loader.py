@@ -36,7 +36,7 @@ class dataLoader(object):
             # Removes '\n' at the begining
             person = data[:-1]
             all_person.append(person)
-
+        
         # Get all persons
         all_person = sorted(all_person)
         nPersons   = len(all_person)
@@ -88,7 +88,7 @@ class dataLoader(object):
         cropped_img = image[starty:endy, startx:endx]
 
         # Reduce Mean
-        cropped_img = cropped_img - cropped_img.mean()
+        #cropped_img = cropped_img - cropped_img.mean()
 
         return cropped_img
 
@@ -181,9 +181,9 @@ class dataLoader(object):
             for i in range(len(p1_step)):
                 rgb_image_1 = p1_step[i]
                 rgb_image_2 = p2_step[i]
-                # Normalize each channel in the image
-                rgb_image_1 = self.reduce_mean_and_std(rgb_image_1)
-                rgb_image_2 = self.reduce_mean_and_std(rgb_image_2)
+#                # Normalize each channel in the image
+#                rgb_image_1 = self.reduce_mean_and_std(rgb_image_1)
+#                rgb_image_2 = self.reduce_mean_and_std(rgb_image_2)
                 # Check to do Augmentation
                 if data_augmentation == True:
                     # Flip
@@ -210,10 +210,6 @@ class dataLoader(object):
             p2_batch.append(p2_step)
 
             p_n_batch.append(pos_neg)
-#            one_hot_1 = np.zeros((len(self.all_person)))
-#            one_hot_1[pA_person] = 1.0
-#            one_hot_2 = np.zeros((len(self.all_person)))
-#            one_hot_2[pB_person] = 1.0
 
             p1_idx_batch.append(pA_person)
             p2_idx_batch.append(pB_person)

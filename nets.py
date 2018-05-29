@@ -8,7 +8,7 @@ import torch.nn.functional as F
 #============================== NET ================================
 # Define the model
 class Net(nn.Module):
-    def __init__(self, nChannel, embeddingSize, drop_prob):
+    def __init__(self, nChannel, embeddingSize, nPerson, drop_prob):
         super(Net, self).__init__()
         filtsize = 5
         poolsize = 2
@@ -29,15 +29,18 @@ class Net(nn.Module):
         self.fc    = nn.Linear(672, embeddingSize)
         self.tanh4 = nn.Tanh()
         self.drop  = nn.Dropout(p=drop_prob)
-        # RNN
-        self.rnn   = nn.RNN(input_size=embeddingSize,
-                            hidden_size=embeddingSize,
-                            num_layers=1,
-                            nonlinearity='tanh',
-                            batch_first=True,
-                            dropout=drop_prob)
-
-    def forward_pass(self, x, hidden):
+#        # RNN
+#        self.rnn   = nn.RNN(input_size=embeddingSize,
+#                            hidden_size=embeddingSize,
+#                            num_layers=1,
+#                            nonlinearity='tanh',
+#                            batch_first=True,
+#                            dropout=drop_prob)
+        # FC
+        self.classifierLayer = nn.Linear(embeddingSize, nPerson)
+        self.log_softmax     = nn.LogSoftmax(dim=1)
+        
+    def forward_pass(self, x):
        # Convolutional Layer --1
         x = self.conv1(x)
         x = self.tanh1(x)
@@ -51,35 +54,46 @@ class Net(nn.Module):
         x = self.tanh3(x)
         # FC
         x = x.view(1, -1) # (B, 672)
+        x = self.drop(x)
         x = self.fc(x)
         x = self.tanh4(x)
-        x = self.drop(x)
-        # RNN
+        # Expand dims
         x = x.unsqueeze(1) # (B, 1, embeddingSize)
-        x, hidden = self.rnn(x, hidden)
+#        x = self.classifierLayer(x)
+#        x = self.log_softmax(x)
+        
+        return x
 
-        return x, hidden
-
-    def forward(self, x1, x2, steps, hidden=None):
+    def forward(self, x1, steps, hidden=None):
         left_outputs = []
-        right_outputs = []
+        #right_outputs = []
         # Number of steps
         for t in range(steps):
             # Forward pass for cam-1
-            output1, hidden = self.forward_pass(x1[:, t, :, :, :], hidden)
+            output1 = self.forward_pass(x1[:, t, :, :, :])
             # Forward pass for cam-2
-            output2, hidden = self.forward_pass(x2[:, t, :, :, :], hidden)
+            #output2 = self.forward_pass(x2[:, t, :, :, :])
             # Append features
             left_outputs.append(output1)
-            right_outputs.append(output2)
-
-        # Temporal Pooling
+            #right_outputs.append(output2)
+        
         left_outputs  = torch.cat(left_outputs,   dim=1) # N * [B, 1, 128] --> [B, N, 128]
-        right_outputs = torch.cat(right_outputs,  dim=1) # N * [B, 1, 128] --> [B, N, 128]
+        #right_outputs = torch.cat(right_outputs,  dim=1) # N * [B, 1, 128] --> [B, N, 128]
+
+#        left_outputs, hidden = self.rnn(left_outputs, hidden)
+#        right_outputs, hidden = self.rnn(right_outputs, hidden)
+        
+        # Temporal Pooling
         left_output   = torch.mean(left_outputs,  dim=1) # [B, 1, 128]
-        right_output  = torch.mean(right_outputs, dim=1) # [B, 1, 128]
+        #right_output  = torch.mean(right_outputs, dim=1) # [B, 1, 128]
 
         left_output  = left_output.view(1, -1)  # (B, 128)
-        tight_output = right_output.view(1, -1) # (B, 128)
+        #right_output = right_output.view(1, -1) # (B, 128)
+        
+        left_id  = self.classifierLayer(left_output)
+        left_id  = self.log_softmax(left_id)
+        
+#        right_id = self.classifierLayer(right_output)
+#        right_id = self.log_softmax(right_id)
 
-        return left_output, right_output
+        return left_id #, right_id

@@ -29,15 +29,16 @@ class reid_Learner(object):
                                       mode='Train')
 
         # Loss functions
-        identity_loss     = nn.CrossEntropyLoss(reduce=True)
+        identity_loss_l = nn.NLLLoss(reduce=True)
+        identity_loss_r = nn.NLLLoss(reduce=True)
         pairwise_distance = nn.PairwiseDistance(p=2)
         HingeEmbeddLoss   = nn.HingeEmbeddingLoss(margin=opt.margin, reduce=True)
 
         # Build graph
         if opt.use_opt_flow == True:
-            net = Net(5, opt.hidden_size, opt.drop)
+            net = Net(5, opt.hidden_size, opt.nPersons, opt.drop)
         else:
-            net = Net(3, opt.hidden_size, opt.drop)
+            net = Net(3, opt.hidden_size, opt.nPersons, opt.drop)
         # Set model to train
         net.train()
 
@@ -45,7 +46,7 @@ class reid_Learner(object):
         net = net.cuda()
 
         # Optimizer
-        optimizer = optim.Adam(net.parameters(), lr=opt.l_rate, eps=1e-08, weight_decay=opt.l2)
+        optimizer = optim.SGD(net.parameters(), lr=opt.l_rate, momentum=0.9)
 
         # Check if training has to be continued
         if opt.continue_train:
@@ -55,7 +56,9 @@ class reid_Learner(object):
                 load_model = os.path.join(opt.checkpoint_dir, opt.init_checkpoint_file)
             print("Resume training from previous checkpoint: %s" % opt.init_checkpoint_file)
             net.load_state_dict(torch.load(load_model))
-
+        
+        # Zero-state
+        hidden_state=None
         # Begin Training
         for eph in range(opt.start_step, opt.max_steps):
             for i in range(opt.nPersons*2):
@@ -67,30 +70,34 @@ class reid_Learner(object):
                     l_batch, r_batch, p_n_batch, l_idx_batch, r_idx_batch = output_feed
 
                 # Input data
+                print(l_idx_batch)
                 l_batch     = torch.tensor(l_batch,  dtype=torch.float).cuda()
                 r_batch     = torch.tensor(r_batch,  dtype=torch.float).cuda()
-                p_n_batch   = torch.tensor(p_n_batch, dtype=torch.long).cuda()
+                #p_n_batch   = torch.tensor(p_n_batch, dtype=torch.long).cuda()
                 l_idx_batch = torch.tensor(l_idx_batch, dtype=torch.long).cuda()
                 r_idx_batch = torch.tensor(r_idx_batch, dtype=torch.long).cuda()
 
                 l_batch = Variable(l_batch)
                 r_batch = Variable(r_batch)
-                p_n_batch   = Variable(p_n_batch)
+                #p_n_batch   = Variable(p_n_batch)
                 l_idx_batch = Variable(l_idx_batch)
                 r_idx_batch = Variable(r_idx_batch)
 
                 # Forward pass
-                l_output, r_output = net(l_batch, r_batch, steps=opt.sequence_length)
+                #l_output, r_output, l_id, r_id, hidden_state = net(l_batch, r_batch, steps=opt.sequence_length, hidden=hidden_state)
+                l_id = net(l_batch, steps=opt.sequence_length)
 
-                # Compute loss
-                l2_dist = pairwise_distance(l_output, r_output)
-                loss = HingeEmbeddLoss(l2_dist, p_n_batch) + identity_loss(l_output, l_idx_batch) + identity_loss(r_output, r_idx_batch)
+#                # Compute loss
+#                l2_dist = pairwise_distance(l_output, r_output)
+#                loss = HingeEmbeddLoss(l2_dist, p_n_batch) + identity_loss_l(l_id, l_idx_batch) + identity_loss_r(r_id, r_idx_batch)
+                 #loss = identity_loss_l(l_id, l_idx_batch) + identity_loss_r(r_id, r_idx_batch)
+                loss = identity_loss_l(l_id, l_idx_batch)
 
                 # Run Optim
                 loss.backward()
 
                 # Clip gradient
-                torch.nn.utils.clip_grad_norm(net.parameters(), opt.clip_grad)
+                torch.nn.utils.clip_grad_norm_(net.parameters(), opt.clip_grad)
 
                 # Update the weights
                 optimizer.step()
@@ -103,7 +110,7 @@ class reid_Learner(object):
                     print('Loss: ', interm_loss, ' at Epoch: ', str(eph + 1), ' iteration: ', i)
 
             if eph % opt.save_latest_freq == 0:
-                model_name = 'hnRiD_' + str(i) + '.ckpt'
+                model_name = 'hnRiD_' + str(eph) + '.ckpt'
                 checkpoint_path = os.path.join(opt.checkpoint_dir, model_name)
                 torch.save(net.state_dict(), checkpoint_path)
                 print("Intermediate file saved")
