@@ -247,7 +247,7 @@ avgDiff = avgDiff / avgDiffCount
 cmcInds = np.zeros(nPersons)
 cmc     = np.zeros(nPersons)
 for i in range(nPersons):
-    cmcInds[i] = i
+    cmcInds[i] = i + 1
     tmp = simMat[i, :]
     o   = np.argsort(tmp)
     # Find the element we want
