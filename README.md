@@ -1,4 +1,4 @@
-# Video Reid_PyTorch
+# Recurrent Convolutional Network for Video-based Person Re-Identification
 
 This is pytorch implementation for human Reid described in the paper: [Recurrent Convolutional Network for Video-based Person Re-Identification](https://www.cv-foundation.org/openaccess/content_cvpr_2016/papers/McLaughlin_Recurrent_Convolutional_Network_CVPR_2016_paper.pdf)
 
