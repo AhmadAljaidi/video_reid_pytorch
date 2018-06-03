@@ -32,7 +32,7 @@ flags.DEFINE_float("drop", 0.5,  " Dropout probability")
 flags.DEFINE_float("l2", 0.0005, " Weight Decay")
 flags.DEFINE_float("l_rate", 0.001, " learning rate")
 flags.DEFINE_float("clip_grad", 5.0, "Magnitude of clip on the RNN gradient")
-flags.DEFINE_integer("reduce_l_rate_itr", 10000, "Reduce learning rate after this many iterations")
+flags.DEFINE_integer("reduce_l_rate", 10, "Reduce learning rate after this many epochs")
 flags.DEFINE_integer("summary_freq", 2, "Logging every summary_freq iterations")
 flags.DEFINE_integer("valid_freq",   25, "Logging every valid_freq iterations")
 flags.DEFINE_integer("save_latest_freq", 25000, \
