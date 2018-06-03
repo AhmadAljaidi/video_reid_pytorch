@@ -73,6 +73,6 @@ class Net(nn.Module):
         outputs = torch.cat(outputs, dim=1)  # N * [B, 1, 128] --> [B, N, 128]
         output  = torch.mean(outputs, dim=1) # [B, 1, 128]
 
-        output  = output.view(1, -1)  # (B, 128)
+        output  = output.view(-1, 128)  # (B, 128)
 
-        return output
+        return output, hidden
