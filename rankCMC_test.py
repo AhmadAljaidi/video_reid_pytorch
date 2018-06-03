@@ -127,8 +127,9 @@ def read_norm_augment_imageSeq(imgSeq, shiftx, shifty, doflip):
         rgb_image = np.transpose(rgb_image, axes=[2, 0, 1])
         # Collect RGB frames
         rgb_seq.append(rgb_image)
-    # Expand dims -- 1, n_steps, 3, 56, 40
+    # n_steps, 3, 56, 40
     rgb_seq = np.array(rgb_seq)
+    # Expand dims -- 1, n_steps, 3, 56, 40
     rgb_seq = np.expand_dims(rgb_seq, axis=0)
 
     return np.array(rgb_seq)
@@ -150,6 +151,8 @@ net.eval()
 # Use GPU if available
 if args.use_gpu == 1:
     net = net.cuda()
+else:
+    print('GPU unavailable!')
 
 # Load checkpoint
 load_model = os.path.join(args.checkpoint_dir, args.checkpoint_file)
@@ -189,7 +192,8 @@ for shiftx in range(1, 9):
                 imgSeq = imgSeq.cuda()
             # Net Forward pass
             imgSeq = Variable(imgSeq)
-            out = net(imgSeq, steps=sampleSeqLength)
+            out, hidden = net(imgSeq, steps=sampleSeqLength)
+            # Read data from GPU to CPU
             out = out.clone().cpu().data.numpy()
             feats_cam_a.append(out)
         # Delete
@@ -215,7 +219,8 @@ for shiftx in range(1, 9):
                 imgSeq = imgSeq.cuda()
             # Net Forward pass
             imgSeq = Variable(imgSeq)
-            out = net(imgSeq, steps=sampleSeqLength)
+            out, hidden = net(imgSeq, steps=sampleSeqLength)
+            # Read data from GPU to CPU
             out = out.clone().cpu().data.numpy()
             feats_cam_b.append(out)
         # Delete
@@ -257,6 +262,9 @@ for i in range(nPersons):
 
 # Compute CMC average
 cmc = (cmc / nPersons) * 100
+
+
+#-------------------------------------------------------------------------------
 # Show test results
 compare_rank = [1, 2, 3, 4, 5]
 for i in compare_rank:
@@ -269,3 +277,4 @@ plt.xlabel('Rank')
 plt.ylabel('CMC(%)')
 plt.savefig('test_result.png')
 #plt.plot()
+#-------------------------------------------------------------------------------
