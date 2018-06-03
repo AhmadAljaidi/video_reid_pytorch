@@ -8,7 +8,7 @@ This is pytorch implementation for human Reid described in the paper: [Recurrent
 3. OpenCV --v3.2
 4. Matplotlib --v2.1
 
-### Preparing training and validation data
+### Preparing training and testing data
 First we need to split the data into train and test
 
 1. Download the [iLIDS-VID](http://www.eecs.qmul.ac.uk/~xiatian/downloads_qmul_iLIDS-VID_ReID_dataset.html) dataset.
