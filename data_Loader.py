@@ -36,7 +36,7 @@ class dataLoader(object):
             # Removes '\n' at the begining
             person = data[:-1]
             all_person.append(person)
-        
+
         # Get all persons
         all_person = sorted(all_person)
         nPersons   = len(all_person)
@@ -60,6 +60,9 @@ class dataLoader(object):
 
             all_seq_cam1.append(interm_person_cam1)
             all_seq_cam2.append(interm_person_cam2)
+
+        print('Total People: ', len(all_person))
+        print('Seq: ', len(all_seq_cam1))
 
         self.all_person = all_person
         self.all_seq_cam1 = all_seq_cam1
@@ -88,7 +91,7 @@ class dataLoader(object):
         cropped_img = image[starty:endy, startx:endx]
 
         # Reduce Mean
-        #cropped_img = cropped_img - cropped_img.mean()
+        cropped_img = cropped_img - cropped_img.mean()
 
         return cropped_img
 
@@ -115,7 +118,7 @@ class dataLoader(object):
                         actualSampleSeqLen = nSeqA
                     else:
                         actualSampleSeqLen = nSeqB
-                # Start A and startB
+                # StartA and startB
                 startA = np.random.randint(0, nSeqA - actualSampleSeqLen, 1)[0]
                 startB = np.random.randint(0, nSeqB - actualSampleSeqLen, 1)[0]
                 # Persons index
@@ -128,17 +131,16 @@ class dataLoader(object):
                 random.shuffle(permAllPersons)
                 personA = permAllPersons[0]
                 personB = permAllPersons[1]
-                # Check for un-even sequences
                 actualSampleSeqLen = self.n_steps
                 nSeqA = len(self.all_seq_cam1[personA])
                 nSeqB = len(self.all_seq_cam2[personB])
-
+                # Check for un-even sequences
                 if nSeqA <= self.n_steps or nSeqB <= self.n_steps:
                     if nSeqA < nSeqB:
                         actualSampleSeqLen = nSeqA
                     else:
                         actualSampleSeqLen = nSeqB
-                # Start A and startB
+                # StartA and startB
                 startA = np.random.randint(0, nSeqA - actualSampleSeqLen, 1)[0]
                 startB = np.random.randint(0, nSeqB - actualSampleSeqLen, 1)[0]
                 # Persons index
@@ -181,9 +183,9 @@ class dataLoader(object):
             for i in range(len(p1_step)):
                 rgb_image_1 = p1_step[i]
                 rgb_image_2 = p2_step[i]
-#                # Normalize each channel in the image
-#                rgb_image_1 = self.reduce_mean_and_std(rgb_image_1)
-#                rgb_image_2 = self.reduce_mean_and_std(rgb_image_2)
+                # Normalize each channel in the image
+                rgb_image_1 = self.reduce_mean_and_std(rgb_image_1)
+                rgb_image_2 = self.reduce_mean_and_std(rgb_image_2)
                 # Check to do Augmentation
                 if data_augmentation == True:
                     # Flip
