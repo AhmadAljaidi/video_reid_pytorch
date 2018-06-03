@@ -52,7 +52,7 @@ class reid_Learner(object):
         # Optimizer
         optimizer = optim.SGD(net.parameters(), lr=opt.l_rate,  weight_decay=opt.l2, momentum=0.9)
 
-        # Decay LR by a factor of 0.1 every 7 epochs
+        # Decay LR by a factor of 0.1 every n epochs
         exp_lr_scheduler = lr_scheduler.StepLR(optimizer, step_size=opt.reduce_l_rate, gamma=0.1)
 
         # Check if training has to be continued
