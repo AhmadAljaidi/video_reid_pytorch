@@ -193,7 +193,7 @@ for shiftx in range(1, 9):
             # Net Forward pass
             imgSeq = Variable(imgSeq)
             out, hidden = net(imgSeq, steps=sampleSeqLength)
-            # Read data from GPU to CPU
+            # Read data from GPU
             out = out.clone().cpu().data.numpy()
             feats_cam_a.append(out)
         # Delete
@@ -219,8 +219,8 @@ for shiftx in range(1, 9):
                 imgSeq = imgSeq.cuda()
             # Net Forward pass
             imgSeq = Variable(imgSeq)
-            out, hidden = net(imgSeq, steps=sampleSeqLength)
-            # Read data from GPU to CPU
+            out = net(imgSeq, steps=sampleSeqLength)
+            # Read data from GPU
             out = out.clone().cpu().data.numpy()
             feats_cam_b.append(out)
         # Delete
@@ -262,7 +262,6 @@ for i in range(nPersons):
 
 # Compute CMC average
 cmc = (cmc / nPersons) * 100
-
 
 #-------------------------------------------------------------------------------
 # Show test results
