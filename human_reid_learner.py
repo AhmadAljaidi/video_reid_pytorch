@@ -6,6 +6,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.autograd import Variable
+from torch.optim import lr_scheduler
 from tensorboardX import SummaryWriter
 
 class reid_Learner(object):
@@ -51,6 +52,9 @@ class reid_Learner(object):
         # Optimizer
         optimizer = optim.SGD(net.parameters(), lr=opt.l_rate,  weight_decay=opt.l2, momentum=0.9)
 
+        # Decay LR by a factor of 0.1 every 7 epochs
+        exp_lr_scheduler = lr_scheduler.StepLR(optimizer, step_size=opt.reduce_l_rate, gamma=0.1)
+
         # Check if training has to be continued
         if opt.continue_train:
             if opt.init_checkpoint_file is None:
@@ -63,6 +67,7 @@ class reid_Learner(object):
         # Begin Training
         for eph in range(opt.start_step, opt.max_steps):
             interm_loss = 0.0
+            exp_lr_scheduler.step()
             for i in range(opt.nPersons*2):
                 if i%2 == 0:
                     output_feed = train_dataLoader.gen_data_batch(opt.batch_size, int(i/2), 1, data_augmentation=True)
