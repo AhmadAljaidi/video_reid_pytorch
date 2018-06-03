@@ -26,7 +26,7 @@ class Net(nn.Module):
         self.tanh3 = nn.Tanh()
 
         # FC
-        self.fc    = nn.Linear(672, embeddingSize)
+        self.fc    = nn.Linear(32*7*3, embeddingSize)
         self.tanh4 = nn.Tanh()
         self.drop  = nn.Dropout(p=drop_prob)
         # RNN
@@ -50,7 +50,7 @@ class Net(nn.Module):
         x = self.conv3(x)
         x = self.tanh3(x)
         # FC
-        x = x.view(1, -1) # (B, 672)
+        x = x.view(-1, 32*7*3) # (B, 672)
         x = self.fc(x)
         x = self.tanh4(x)
         x = self.drop(x)
