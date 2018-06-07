@@ -2,12 +2,12 @@ from __future__ import print_function
 import os
 import pprint
 import tensorflow as tf
-from human_reid_learner_1 import reid_Learner
+from human_reid_learner import reid_Learner
 
 # server directory /home/amohamma/UOIT/Human_re_id/iLIDS-VID/i-LIDS-VID/sequences
 # laptop directory C:/Users/k-any/Uoit/Human-Re-id/Dataset/iLIDS-VID/i-LIDS-VID/sequences
 flags = tf.app.flags
-flags.DEFINE_string("directory", "/home/tony/Documents/friends_stuff/ahmad_vclab/i-LIDS-VID/sequences", "Directory to the dataset")
+flags.DEFINE_string("directory", "./i-LIDS-VID/sequences", "Directory to the dataset")
 flags.DEFINE_string("opt_flow_dir", "./optical_flow_dir", "Directory to the optical flow dataset")
 flags.DEFINE_string("train_test_split_dir", "./dataset", "Directory to the train/test dataset")
 flags.DEFINE_string("dataset_name", "dataset_1_train.txt", "Train dataset name")
