@@ -4,11 +4,12 @@ File name: nets.py
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch.autograd import Variable
 
 #============================== NET ================================
 # Define the model
 class Net(nn.Module):
-    def __init__(self, nChannel, embeddingSize,  nPerson, drop_prob):
+    def __init__(self, nChannel, embeddingSize,  nPerson, drop_prob, batch_size):
         super(Net, self).__init__()
         filtsize = 5
         poolsize = 2
@@ -38,7 +39,12 @@ class Net(nn.Module):
         self.rnn   = nn.LSTM(input_size=embeddingSize,
                             hidden_size=embeddingSize,
                             num_layers=1,
-                            batch_first=True)
+                            batch_first=False,
+                            dropout=drop_prob)
+
+        # Batch size:
+        self.batch_size = batch_size
+        self.embeddingSize = embeddingSize
 
         # Initialize weights:
         for m in self.modules():
@@ -65,40 +71,33 @@ class Net(nn.Module):
         x = self.fc(x)
         x = self.tanh4(x)
         x = self.drop(x)
-        # Expand dims
-        x = x.unsqueeze(1) # (B, 1, embeddingSize)
 
         return x
 
-    def forward_pass(self, x, hidden=None):
-        outputs = []
+    def forward_pass(self, x, steps, hidden=None):
+        outputs = Variable(torch.zeros(steps, self.batch_size, self.embeddingSize)).cuda()
         # CNN
         for t in range(steps):
             # Forward pass for cam-1
-            output = self.forward_pass(x[:, t, :, :, :])
+            output = self.conv_pass(x[:, t, :, :, :])
             # Append features
-            outputs.append(output)
+            outputs[t] = output
         # RNN
-        outputs  = torch.cat(outputs, dim=1) # N * [B, 1, 128] --> [B, N, 128]
-        outputs, hidden1 = self.rnn(outputs, hidden)
+        outputs, _ = self.rnn(outputs, hidden)
         # Temporal Pooling
-        output   = torch.mean(outputs,  dim=1) # [B, 1, 128]
+        output   = torch.mean(outputs,  dim=0) # [B, 128]
         # Classifier
-        output  = output.view(-1, 128)  # (B, 128)
         id = self.classifierLayer(output)
         id = self.log_softmax(id)
 
         return output, id
 
-    def forward(self, x1, x2, steps, hidden=None):
-        left_output = []
-        right_output = []
-
+    def forward(self, x1, x2, steps):
         #--------------------------- Left Input --------------------------------
-        left_output, l_id  = forward_pass(x1)
+        left_output, l_id  = self.forward_pass(x1, steps)
 
         #--------------------------- Right Input -------------------------------
-        right_output, r_id = forward_pass(x2)
+        right_output, r_id = self.forward_pass(x2, steps)
 
 
         return left_output, right_output, l_id, r_id
