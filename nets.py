@@ -36,7 +36,7 @@ class Net(nn.Module):
         self.log_softmax     = nn.LogSoftmax(dim=1)
 
         # RNN
-        self.rnn   = nn.LSTM(input_size=embeddingSize,
+        self.rnn   = nn.RNN(input_size=embeddingSize,
                             hidden_size=embeddingSize,
                             num_layers=1,
                             batch_first=False,
@@ -54,7 +54,7 @@ class Net(nn.Module):
                 nn.init.constant_(m.weight, 1)
                 nn.init.constant_(m.bias, 0)
 
-    def conv_pass(self, x):
+    def net_step(self, x, hidden):
        # Convolutional Layer --1
         x = self.conv1(x)
         x = self.tanh1(x)
@@ -71,21 +71,23 @@ class Net(nn.Module):
         x = self.fc(x)
         x = self.tanh4(x)
         x = self.drop(x)
+        # Expand dims- (1, B, 128)
+        x = x.unsqueeze(0)
+        # RNN
+        output, hidden = self.rnn(input, hidden)
 
-        return x
+        return output, hidden
 
     def forward_pass(self, x, steps, hidden=None):
-        outputs = Variable(torch.zeros(steps, self.batch_size, self.embeddingSize)).cuda()
+        outputs = Variable(torch.zeros(steps, self.batch_size, self.embeddingSize), dtype=torch.float).cuda()
         # CNN
         for t in range(steps):
             # Forward pass for cam-1
-            output = self.conv_pass(x[:, t, :, :, :])
+            output, hidden = self.net_step(x[:, t, :, :, :], hidden)
             # Append features
             outputs[t] = output
-        # RNN
-        outputs, _ = self.rnn(outputs, hidden)
         # Temporal Pooling
-        output   = torch.mean(outputs,  dim=0) # [B, 128]
+        output = torch.mean(outputs,  dim=0) # [B, 128]
         # Classifier
         id = self.classifierLayer(output)
         id = self.log_softmax(id)
@@ -98,6 +100,5 @@ class Net(nn.Module):
 
         #--------------------------- Right Input -------------------------------
         right_output, r_id = self.forward_pass(x2, steps)
-
 
         return left_output, right_output, l_id, r_id
