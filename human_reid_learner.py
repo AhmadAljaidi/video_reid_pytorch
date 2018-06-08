@@ -30,16 +30,16 @@ class reid_Learner(object):
                                       mode='Train')
 
         # Loss functions
-        identity_loss_l = nn.NLLLoss(reduce=True)
-        identity_loss_r = nn.NLLLoss(reduce=True)
+        identity_loss_l   = nn.NLLLoss(reduce=True)
+        identity_loss_r   = nn.NLLLoss(reduce=True)
         pairwise_distance = nn.PairwiseDistance(p=2)
-        HingeEmbeddLoss = nn.HingeEmbeddingLoss(margin=opt.margin, reduce=True)
+        HingeEmbeddLoss   = nn.HingeEmbeddingLoss(margin=opt.margin, reduce=True)
 
         # Build graph
         if opt.use_opt_flow == True:
-            net = Net(5, opt.hidden_size, opt.nPersons, opt.drop)
+            net = Net(5, opt.hidden_size, opt.nPersons, opt.drop, opt.batch_size)
         else:
-            net = Net(3, opt.hidden_size, opt.nPersons, opt.drop)
+            net = Net(3, opt.hidden_size, opt.nPersons, opt.drop, opt.batch_size)
         # Set model to train
         net.train()
 
@@ -50,7 +50,15 @@ class reid_Learner(object):
             print('GPU unavailable!')
 
         # Optimizer
-        optimizer = optim.SGD(net.parameters(), lr=opt.l_rate,  weight_decay=opt.l2, momentum=0.9)
+        #optimizer = optim.SGD(net.parameters(), lr=opt.l_rate,  weight_decay=opt.l2, momentum=0.9)
+        optimizer = optim.Adam(net.parameters(), lr=opt.l_rate,  weight_decay=opt.l2)
+
+        # Total Params:
+        print('...................Trainable paramters.........................')
+        for name, param in net.named_parameters():
+            if param.requires_grad:
+                print('Layer: ', name)
+        print('...............................................................')
 
         # Decay LR by a factor of 0.1 every n epochs
         exp_lr_scheduler = lr_scheduler.StepLR(optimizer, step_size=opt.reduce_l_rate, gamma=0.1)
@@ -76,6 +84,11 @@ class reid_Learner(object):
                     output_feed = train_dataLoader.gen_data_batch(opt.batch_size, None, -1, data_augmentation=True)
                     l_batch, r_batch, p_n_batch, l_idx_batch, r_idx_batch = output_feed
 
+                # DEBUG:
+                # if eph > 20:
+                #     print(l_idx_batch)
+                #     print(r_idx_batch)
+
                 # Input data
                 if opt.use_gpu:
                     # Convert to GPU
@@ -98,18 +111,22 @@ class reid_Learner(object):
                 l_idx_batch = Variable(l_idx_batch)
                 r_idx_batch = Variable(r_idx_batch)
 
+                # Optimizer zero grad
+                optimizer.zero_grad()
+
                 # Forward pass
-                l_output, r_output, l_id, r_id, hidden = net(l_batch, r_batch, opt.sequence_length, hidden=None)
+                l_output, r_output, l_id, r_id = net(l_batch, r_batch, opt.sequence_length)
 
                 # Compute loss
                 l2_dist = pairwise_distance(l_output, r_output)
                 loss = HingeEmbeddLoss(l2_dist, p_n_batch) + identity_loss_l(l_id, l_idx_batch) + identity_loss_r(r_id, r_idx_batch)
+                #loss = identity_loss_l(l_id, l_idx_batch) #+ identity_loss_r(r_id, r_idx_batch)
 
                 # Run Optim
                 loss.backward()
 
                 # Clip gradient
-                torch.nn.utils.clip_grad_norm_(net.parameters(), opt.clip_grad)
+                torch.nn.utils.clip_grad_value_(net.parameters(), opt.clip_grad)
 
                 # Update the weights
                 optimizer.step()
@@ -120,8 +137,8 @@ class reid_Learner(object):
             if eph % opt.summary_freq == 0:
                 interm_loss = interm_loss/(opt.nPersons*2)
                 writer.add_scalar('loss', interm_loss, eph)
-                for name, param in net.named_parameters():
-                    writer.add_histogram(name, param.clone().cpu().data.numpy(), eph)
+                # for name, param in net.named_parameters():
+                #     writer.add_histogram(name, param.clone().cpu().data.numpy(), eph)
                 print('Loss: ', np.round(interm_loss, 3), ' at Epoch: ', str(eph + 1))
 
             if eph % opt.save_latest_freq == 0:

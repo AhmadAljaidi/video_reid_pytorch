@@ -69,14 +69,13 @@ class dataLoader(object):
         self.all_seq_cam2 = all_seq_cam2
 
     def reduce_mean_and_std(self, image):
-        image_1 = np.zeros_like(image)
         H, W, C = image.shape
         for i in range(C):
-            v = image[:, :, i].std()
+            v = image[:, :, i].std(ddof=1)
             m = image[:, :, i].mean()
-            image_1[:, :, i] = (image[:, :, i] - m) / v
+            image[:, :, i] = (image[:, :, i] - m) / v
 
-        return image_1
+        return image
 
     def imageCrop(self, image, shiftx, shifty):
         in_h, in_w, in_c = image.shape
@@ -91,7 +90,7 @@ class dataLoader(object):
         cropped_img = image[starty:endy, startx:endx]
 
         # Reduce Mean
-        cropped_img = cropped_img - cropped_img.mean()
+        #cropped_img = cropped_img - cropped_img.mean()
 
         return cropped_img
 
@@ -150,8 +149,8 @@ class dataLoader(object):
             # Read the images
             for step in range(self.n_steps):
                 # Path
-                rgb_image_path_1 = os.path.join(self.data_directory, self.all_seq_cam1[pA_person][startA + step])
-                rgb_image_path_2 = os.path.join(self.data_directory, self.all_seq_cam2[pB_person][startB + step])
+                rgb_image_path_1 = os.path.join(self.all_seq_cam1[pA_person][startA + step])
+                rgb_image_path_2 = os.path.join(self.all_seq_cam2[pB_person][startB + step])
                 # Read RGB image
                 rgb_image_1 = cv2.imread(rgb_image_path_1)
                 rgb_image_2 = cv2.imread(rgb_image_path_2)
@@ -217,7 +216,8 @@ class dataLoader(object):
             p2_idx_batch.append(pB_person)
             #---------------------------------------------------------------
 
-        output_list = [np.array(p1_batch), np.array(p2_batch), np.array(p_n_batch),\
-                       np.array(p1_idx_batch), np.array(p2_idx_batch)]
+        output_list = [np.array(p1_batch),  np.array(p2_batch,),\
+                       np.array(p_n_batch), np.array(p1_idx_batch),\
+                       np.array(p2_idx_batch)]
 
         return output_list

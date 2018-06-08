@@ -7,7 +7,7 @@ import numpy as np
 from tqdm import tqdm
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--dataset_dir",  type=str, default='/home/amohamma/UOIT/Human_re_id/iLIDS-VID/i-LIDS-VID/sequences', help="where the dataset is stored")
+parser.add_argument("--dataset_dir",  type=str, default='./i-LIDS-VID/sequences', help="where the dataset is stored")
 parser.add_argument("--data_name",    type=str, default='dataset_1', help="Dataset name")
 parser.add_argument("--gen_opt_flow", type=str, default='False',  help="Compute optical flow")
 parser.add_argument("--train_test_split", type=int, default=0.5,  help="Train/Test split")

@@ -10,7 +10,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--dataset_dir",     type=str, default='/home/amohamma/UOIT/Human_re_id/iLIDS-VID/i-LIDS-VID/sequences', help="where the dataset is stored")
+parser.add_argument("--dataset_dir",     type=str, default='./i-LIDS-VID/sequences', help="where the dataset is stored")
 parser.add_argument("--optflow_dir",     type=str, default='./optical_flow_dir', help="where the optical flow is stored")
 parser.add_argument("--test_file",       type=str, default='./dataset/dataset_1_test.txt', help="File containing the test persons")
 parser.add_argument("--checkpoint_dir",  type=str, default='./checkpoints', help="Where the ckpt files are")

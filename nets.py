@@ -22,37 +22,39 @@ class Net(nn.Module):
         # Conv
         self.cnn = nn.Sequential(
                    # Layer 1
-                   nn.Conv2d(nChannel, 16, filtsize, stride=1),
+                   nn.Conv2d(nChannel, 16, filtsize, stride=1, padding=2),
                    nn.Tanh(),
                    nn.MaxPool2d(poolsize, stride=stepSize),
 
                    # Layer 2
-                   nn.Conv2d(16, 32, filtsize, stride=1),
+                   nn.Conv2d(16, 32, filtsize, stride=1, padding=2),
                    nn.Tanh(),
                    nn.MaxPool2d(poolsize, stride=stepSize),
 
                    # Layer 3
-                   nn.Conv2d(32, 32, filtsize, stride=1),
+                   nn.Conv2d(32, 32, filtsize, stride=1, padding=2),
                    nn.Tanh(),
+                   )
 
-                   # FC
-                   nn.Linear(32*7*3, embeddingSize),
+        # FC
+        self.fc  = nn.Sequential(
+                   nn.Linear(32*14*10, embeddingSize),
                    nn.Tanh(),
                    nn.Dropout(p=drop_prob),
                    )
 
         # Classification Layer
         self.classify = nn.Sequential(
-                        nn.Linear(embeddingSize, nPerson)
-                        nn.LogSoftmax(dim=1))
+                        nn.Linear(embeddingSize, nPerson),
+                        nn.LogSoftmax(dim=1),
+                        )
 
         # RNN
-        self.rnn   = nn.RNN(input_size=embeddingSize,
-                            hidden_size=embeddingSize,
-                            num_layers=1,
-                            nonlinearity='tanh',
-                            batch_first=False,
-                            dropout=drop_prob)
+        self.rnn = nn.RNN(input_size=embeddingSize,
+                          hidden_size=embeddingSize,
+                          num_layers=1,
+                          nonlinearity='tanh',
+                          batch_first=False)
 
         # Initialize weights:
         for m in self.modules():
@@ -64,15 +66,15 @@ class Net(nn.Module):
 
     def net_step(self, x, hidden):
         x = self.cnn(x)
-        # Expand dims- (1, B, 128)
-        x = x.unsqueeze(0)
-        # RNN
-        x, hidden = self.rnn(x, hidden)
+        x = x.view(-1, 32*14*10)
+        x = self.fc(x)
+        x = x.unsqueeze(0) # Expand dims- (1, B, 128)
+        x, hidden = self.rnn(x, hidden) # RNN
 
         return x, hidden
 
     def forward_pass(self, x, steps, hidden=None):
-        outputs = torch.tensor(torch.zeros(steps, self.batch_size, self.embeddingSize), requires_grad=True)
+        outputs = torch.zeros(steps, self.batch_size, self.embeddingSize).cuda()
         # CNN--> RNN
         for t in range(steps):
             # Forward pass
